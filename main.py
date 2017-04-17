@@ -3,10 +3,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import time
+import os
 
 # Parameters
 learning_rate = 0.001
-training_epochs = 100
+training_epochs = 2000
 batch_size = 25
 display_step = 1
 
@@ -45,19 +46,27 @@ biases = {
     'out': tf.Variable(tf.random_normal([n_classes]))
 }
 
-
 # Read Data
 read_data = pd.read_csv("./letter_recognition_training_data_set.csv")
-label_data = pd.get_dummies(read_data,sparse=True)
+label_data = pd.get_dummies(read_data, sparse=True)
+
+
+test_data = pd.read_csv("./letter_recognition_testing_data_set.csv")
+
 # Traning Data
-train_input = label_data.loc[:16999,label_data.columns[:16]]
-train_output = label_data.loc[:16999,label_data.columns[-26:]]
+train_input = label_data.loc[:16999, label_data.columns[:16]]
+train_output = label_data.loc[:16999, label_data.columns[-26:]]
 
-test_input = label_data.loc[17000:,label_data.columns[:16]]
-test_output = label_data.loc[17000:,label_data.columns[-26:]]
-# Transform label to one-hot-vector
+validation_input = label_data.loc[17000:, label_data.columns[:16]]
+validation_output = label_data.loc[17000:, label_data.columns[-26:]]
 
 
+saver = tf.train.Saver()
+
+model_dir = "model"
+model_name = "letter"
+if not os.path.exists(model_dir):
+    os.mkdir(model_dir)
 
 # Construct model
 pred = multilayer_perceptron(x, weights, biases)
@@ -65,6 +74,9 @@ pred = multilayer_perceptron(x, weights, biases)
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred, labels=y))
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 
+#Cost Array
+costlist = []
+epochlist = []
 # Initializing the variables
 init = tf.global_variables_initializer()
 
@@ -88,13 +100,20 @@ with tf.Session() as sess:
         if epoch % display_step == 0:
             print ("Epoch:", '%04d' % (epoch+1), "cost=", \
                 "{:.9f}".format(avg_cost),time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+        costlist.append(avg_cost)
+        epochlist.append(epoch)
     print ("Optimization Finished!")
+
+    saver.save(sess, os.path.join(model_dir, model_name))
 
     # Test model
     correct_prediction = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
     # Calculate accuracy
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
-    print ("Accuracy:", accuracy.eval({x:test_input , y: test_output}))
+    print ("Accuracy:", accuracy.eval({x:validation_input , y: validation_output}))
+
+
+
 
 
 
