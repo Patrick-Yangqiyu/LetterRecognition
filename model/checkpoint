@@ -1,0 +1,2 @@
+model_checkpoint_path: "letter"
+all_model_checkpoint_paths: "letter"

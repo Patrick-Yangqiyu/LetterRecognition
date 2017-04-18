@@ -7,13 +7,13 @@ import os
 
 # Parameters
 learning_rate = 0.001
-training_epochs = 2000
+training_epochs =1000
 batch_size = 25
 display_step = 1
 
 # Network Parameters
 n_hidden_1 = 256   # 1st layer number of features
-n_hidden_2 = 256   # 2nd layer number of features
+n_hidden_2 = 128   # 2nd layer number of features
 n_input = 16     # data input (img shape: 28*28)
 n_classes = 26   # total classes (A-Z letters)
 
@@ -101,11 +101,15 @@ with tf.Session() as sess:
             print ("Epoch:", '%04d' % (epoch+1), "cost=", \
                 "{:.9f}".format(avg_cost),time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
         costlist.append(avg_cost)
-        epochlist.append(epoch)
-    print ("Optimization Finished!")
+        epochlist.append(epoch+1)
+    print ("Optimization Finished!", "total batch" )
 
     saver.save(sess, os.path.join(model_dir, model_name))
 
+    plt.xlabel("EPOCH")
+    plt.ylabel("COST")
+    plt.plot(epochlist, costlist, color="red")
+    plt.savefig('costfig.png')
     # Test model
     correct_prediction = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
     # Calculate accuracy
